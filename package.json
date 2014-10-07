@@ -1,0 +1,8 @@
+{
+  "name": "git-time-app",
+  "dependencies": {
+    "async": "~0.2.9",
+    "express": "^3.17.6",
+    "string-utils": "git+https://github.com/caseman72/string-utils.git"
+  }
+}

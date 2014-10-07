@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:ng="http://angularjs.org" ng-app="gitApp">
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+	<title>Git Time of Day</title>
+	<script type="text/javascript" src="//code.jquery.com/jquery-1.9.1.js"></script>
+	<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.20/angular.min.js"></script>
+	<style type="text/css">
+		#emails, #branches, #months {
+			float:left;
+			width: 25%;
+		}
+
+		h3 {
+			display: inline-block;
+		}
+	</style>
+</head>
+<body>
+<div ng-controller="IndexCtrl">
+	
+	<div id="chart" style="min-width: 600px; height: 800px; margin: 0 auto;"></div>
+
+	<div id="emails">
+		<h3>Users</h3>
+		<label><input type="checkbox" ng-model="controls.emails.all" /> Select All</label>
+		<label><input type="checkbox" ng-model="controls.emails.1x" /> Select 1x</label>
+		<ul>
+			<li ng-repeat="(label, e) in emails">
+				<label><input type="checkbox" ng-model="e.selected" /> {{ label }}</label>
+			</li>
+		</ul>
+	</div>
+
+	<div id="branches">
+		<h3>Branches</h3>
+		<label><input type="checkbox" ng-model="controls.branches.all" /> Select All</label>
+		<label><input type="checkbox" ng-model="controls.branches.1x" /> Select 1x</label>
+		<ul>
+			<li ng-repeat="(label, b) in branches">
+				<label><input type="checkbox" ng-model="b.selected" /> {{ label }}</label>
+			</li>
+		</ul>
+	</div>
+
+	<div id="months">
+		<h3>Months</h3>
+		<label><input type="checkbox" ng-model="controls.months.all" /> Select All</label>
+		<label><input type="checkbox" ng-model="controls.months.1x" /> Select 1x</label>
+		<ul>
+			<li ng-repeat="(label, m) in months">
+				<label><input type="checkbox" ng-model="m.selected" /> {{ label }}</label>
+			</li>
+		</ul>
+	</div>
+
+</div>
+
+<script src="//code.highcharts.com/highcharts.js"></script>
+<script src="/js/chart.js"></script>
+</body>
+</html>
