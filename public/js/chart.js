@@ -1,6 +1,11 @@
-(function() {
+(function(ng) {
+	var days_of_week = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
 	var do_chart = function(data) {
 		$("#chart").highcharts({
+			credits: {
+				enabled: false
+			},
 			chart: {
 				type: "column"
 			},
@@ -52,23 +57,53 @@
 					}
 				}
 			},
+			exporting: {
+				buttons: {
+					contextButton: {
+						menuItems: [
+							{
+								text: "Export to PNG (small)",
+								onclick: function () { this.exportChart({width: 250}); }
+							},
+							{
+								text: "Export to PNG (large)",
+								onclick: function () { this.exportChart(); },
+							},
+							{
+								text: "&nbsp;",
+								onclick: function () { },
+								separator: true
+							},
+							{
+								text: "Refresh Full Git Index (>60s)",
+								onclick: function () { $("#emails").focus().scope().reload(); },
+							},
+							{
+								text: "Refresh",
+								onclick: function () { $("#emails").focus().scope().load(); },
+							}
+						]
+					}
+				}
+			},
 			series: data
 		});
 	};
 
 	// move to client
-	var do_histogram = function (commits, options) {
+	var do_histogram = function (commits, $scope) {
 		var histogram = {};
 		for (var i = 0, n = commits.length; i < n; i++) {
 			var commit = commits[i];
 
-			// rules
+			// rules - controls
 			if (commit.merge) continue;
-			if (!options.emails[commit.email]._selected) continue;
-			if (!options.branches[commit.branch]._selected) continue;
-			if (!options.months[commit.month]._selected) continue;
+			if (!$scope.emails[commit.email]._selected) continue;
+			if (!$scope.branches[commit.branch]._selected) continue;
+			if (!$scope.months[commit.month]._selected) continue;
+			if (!$scope.days[commit.day]._selected) continue;
 
-			var this_hour = "hour_" + new Date(commit.date).getHours();
+			var this_hour = "h_" + new Date(commit.date).getHours();
 
 			if (typeof(histogram[this_hour]) === "undefined") {
 				histogram[this_hour] = {
@@ -105,7 +140,7 @@
 		};
 
 		for (var h = 0; h < 24; h++) {
-			var this_hour = "hour_" + h;
+			var this_hour = "h_" + h;
 
 			if (typeof(histogram[this_hour]) === "undefined") {
 				data_hash.files.data.push(0);
@@ -129,14 +164,21 @@
 		];
 	};
 
-	var app = angular.module("gitApp", []);
+	var app = ng.module("gitApp", []);
 	app.controller("IndexCtrl", ["$scope", "$http", function($scope, $http) {
 
-		$scope.data = [];
-		$scope.emails = {};
-		$scope.branches = {};
-		$scope.months = {};
+		$scope.reset = function() {
+			$scope.data = [];
+			$scope.emails = {};
+			$scope.branches = {};
+			$scope.months = {};
+			$scope.days = {};
+			$scope.ordered_days = [];
 
+			do_chart(do_histogram($scope.data, $scope));
+		};
+
+		// controls
 		$scope.controls = {
 			emails: {
 				_all: false,
@@ -149,13 +191,14 @@
 			months: {
 				_all: true,
 				_singular: false
+			},
+			days: {
+				_all: true,
+				_singular: false
 			}
 		};
-
-		angular.forEach($scope.controls, function(obj, key) {
-			console.log(key, obj);
-
-			Object.defineProperty($scope.controls[key], "all", {
+		ng.forEach($scope.controls, function(obj, key) {
+			Object.defineProperty(obj, "all", {
 				set: function(val) {
 					val = val ? true : false;
 
@@ -163,7 +206,7 @@
 					if (val) {
 						this._singular = false;
 					}
-					angular.forEach($scope[key], function(e) {
+					ng.forEach($scope[key], function(e) {
 						e._selected = val;
 					});
 
@@ -173,14 +216,14 @@
 					return this._all;
 				}
 			});
-			Object.defineProperty($scope.controls[key], "1x", {
+			Object.defineProperty(obj, "1x", {
 				set: function(val) {
 					val = val ? true : false;
 
 					this._singular = val;
 					if (val) {
 						this._all = false;
-						angular.forEach($scope[key], function(e) {
+						ng.forEach($scope[key], function(e) {
 							e._selected = false;
 						});
 					}
@@ -193,12 +236,9 @@
 			});
 		});
 
+		$scope.load_data = function(commits) {
+			$scope.data = commits;
 
-		$http.get("/commits.json").then(function(respsonse) {
-
-			$scope.data = respsonse.data;
-
-			var commits = respsonse.data;
 			var emails = {};
 			var branches = {};
 			var months = {};
@@ -209,9 +249,10 @@
 
 				var this_date = new Date(commit.date);
 				commit.month = ("" + this_date.getFullYear() + "-0" + (this_date.getMonth()+1)).replace(/-0([12][0-9])$/, "-$1");
+				commit.day = days_of_week[ this_date.getDay() ];
 
 				// emails
-				if(!angular.isDefined(emails[commit.email])) {
+				if(!ng.isDefined(emails[commit.email])) {
 					var item = {
 						_selected: false,
 						label: commit.email
@@ -220,7 +261,7 @@
 					Object.defineProperty(item, "selected", {
 						set: function(val) {
 							if ($scope.controls.emails._singular) {
-								angular.forEach($scope.emails, function(e) {
+								ng.forEach($scope.emails, function(e) {
 									e._selected = false;
 								});
 							}
@@ -237,7 +278,7 @@
 				}
 
 				// branches
-				if(!angular.isDefined(branches[commit.branch])) {
+				if(!ng.isDefined(branches[commit.branch])) {
 					var item = {
 						_selected: true,
 						label: commit.branch
@@ -246,7 +287,7 @@
 					Object.defineProperty(item, "selected", {
 						set: function(val) {
 							if ($scope.controls.branches._singular) {
-								angular.forEach($scope.branches, function(b) {
+								ng.forEach($scope.branches, function(b) {
 									b._selected = false;
 								});
 							}
@@ -263,7 +304,7 @@
 				}
 
 				// months
-				if(!angular.isDefined(months[commit.month])) {
+				if(!ng.isDefined(months[commit.month])) {
 					var item = {
 						_selected: true,
 						label: commit.month 
@@ -272,7 +313,7 @@
 					Object.defineProperty(item, "selected", {
 						set: function(val) {
 							if ($scope.controls.months._singular) {
-								angular.forEach($scope.months, function(m) {
+								ng.forEach($scope.months, function(m) {
 									m._selected = false;
 								});
 							}
@@ -289,14 +330,61 @@
 				}
 			}
 
+			var days = {};
+			var ordered_days = [];
+
+			// days
+			ng.forEach(days_of_week, function(day, index) {
+				var item = {
+					_selected: true,
+					label: day,
+					index: index
+				};
+
+				Object.defineProperty(item, "selected", {
+					set: function(val) {
+						if ($scope.controls.days._singular) {
+							ng.forEach($scope.days, function(m) {
+								m._selected = false;
+							});
+						}
+
+						this._selected = val ? true : false;
+						do_chart(do_histogram($scope.data, $scope));
+					},
+					get: function() {
+						return this._selected;
+					}
+				});
+
+				days[day] = item;
+				ordered_days.push(item);
+			});
+
 			$scope.emails = emails;
 			$scope.branches = branches;
 			$scope.months = months;
+			$scope.days = days;
+			$scope.ordered_days = ordered_days;
 
 			do_chart(do_histogram($scope.data, $scope));
-		});
+		}
 
+		$scope.reload = function() {
+			$scope.reset();
+			$http.get("/commits/refresh.json").then(function(response) {
+				$scope.load_data(response.data);
+			});
+		};
 
+		$scope.load = function() {
+			$scope.reset();
+			$http.get("/commits.json").then(function(response) {
+				$scope.load_data(response.data);
+			});
+		};
+
+		$scope.load(); // init
 	}]);
 
-})();
+})(window.angular);

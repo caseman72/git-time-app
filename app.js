@@ -63,7 +63,7 @@ var do_each = function(commit, done) {
 	});
 };
 
-var do_2014 = function(callback) {
+var do_commits = function(callback) {
 	exec(git_command, function(error, stdout/*, stderr*/) {
 		var lines = stdout.trim().split("\n");
 
@@ -82,20 +82,18 @@ var do_2014 = function(callback) {
 					files: 0,
 					insertions: 0,
 					deletions: 0
-
 					, message: words.join(" ")
-					, line: line
+					//, line: line
 				});
 			}
 		}
 
-		async.eachLimit(commits, 200, do_each, function(/*err*/){ callback(commits); });
+		async.eachLimit(commits, 100, do_each, function(/*err*/){ callback(commits); });
 	});
 };
 
 // load it up
-do_2014(function(commits) { console.log("Ready", commits.length); });
-
+do_commits(function(commits) { console.log("Ready", commits.length); });
 
 // prevent express from defining mount and then overriding it
 if (typeof(express.mount) === "undefined") {
@@ -124,10 +122,17 @@ app.get("/commits.json", function(req, res) {
 		res.json(commits);
 	}
 	else {
-		do_2014(function(commits) {
+		do_commits(function(commits) {
 			res.json(commits);
 		});
 	}
+});
+
+app.get("/commits/refresh.json", function(req, res) {
+	commits = []; // reset
+	do_commits(function(commits) {
+		res.json(commits);
+	});
 });
 
 app.listen(config.server_port, function(){ console.log("Listening on {0}".format(config.server_port)); });

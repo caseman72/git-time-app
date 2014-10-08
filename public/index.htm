@@ -8,7 +8,10 @@
 	<style type="text/css">
 		#emails, #branches, #months {
 			float:left;
-			width: 25%;
+			width: 22%;
+		}
+		#emails {
+			margin-left: 8%;
 		}
 
 		h3 {
@@ -19,7 +22,7 @@
 <body>
 <div ng-controller="IndexCtrl">
 	
-	<div id="chart" style="min-width: 600px; height: 800px; margin: 0 auto;"></div>
+	<div id="chart" style="min-width: 600px; min-height: 600px; margin: 0 auto; padding: 0 25px;"></div>
 
 	<div id="emails">
 		<h3>Users</h3>
@@ -54,9 +57,21 @@
 		</ul>
 	</div>
 
+	<div id="days">
+		<h3>Days</h3>
+		<label><input type="checkbox" ng-model="controls.days.all" /> Select All</label>
+		<label><input type="checkbox" ng-model="controls.days.1x" /> Select 1x</label>
+		<ul>
+			<li ng-repeat="d in ordered_days">
+				<label><input type="checkbox" ng-model="d.selected" /> {{ d.label }}</label>
+			</li>
+		</ul>
+	</div>
+
 </div>
 
-<script src="//code.highcharts.com/highcharts.js"></script>
+<script src="/js/highcharts.js"></script>
+<script src="/js/exporting.js"></script>
 <script src="/js/chart.js"></script>
 </body>
 </html>
