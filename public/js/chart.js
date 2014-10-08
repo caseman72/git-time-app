@@ -67,7 +67,7 @@
 							},
 							{
 								text: "Export to PNG (large)",
-								onclick: function () { this.exportChart(); },
+								onclick: function () { this.exportChart({width: 1024}); },
 							},
 							{
 								text: "&nbsp;",
@@ -372,14 +372,14 @@
 
 		$scope.reload = function() {
 			$scope.reset();
-			$http.get("/commits/refresh.json").then(function(response) {
+			$http.get("commits/refresh.json").then(function(response) {
 				$scope.load_data(response.data);
 			});
 		};
 
 		$scope.load = function() {
 			$scope.reset();
-			$http.get("/commits.json").then(function(response) {
+			$http.get("commits.json").then(function(response) {
 				$scope.load_data(response.data);
 			});
 		};

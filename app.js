@@ -4,15 +4,17 @@ var exec = require("child_process").exec;
 var async = require("async");
 var express = require("express");
 
+
 // this app's secret config values
 var config = {
 	server_port: process.env.NODE_APP_PORT || "3030",
-	node_debug: process.env.NODE_APP_DEBUG ? true : false
+	node_debug: process.env.NODE_APP_DEBUG ? true : false,
+	git_mirror_pwd: process.env.NODE_GIT_MIRROR || "./mirror"
 };
 
 var git_command = [
-	"cd /var/repos/vision && git fetch --all > /dev/null && git log -3000 --branches --source --pretty=oneline",
-	//"cd /var/repos/vision && git log -100 --branches --source --pretty=oneline",
+	"cd {0} && git fetch --all > /dev/null && git log -3000 --branches --source --pretty=oneline".format(config.git_mirror_pwd),
+	//"cd {0} && git log -100 --branches --source --pretty=oneline".format(config.git_mirror_pwd),
 	"/bin/grep -v 'cibuild[.]php'",
 	"/bin/grep -v '[.]CI[.]'",
 	"/bin/grep -v 'commit by minify post[-]receive hook'",
@@ -22,12 +24,12 @@ var git_command = [
 
 ].join(" |");
 
-var stat_command = "cd /var/repos/vision && git show --format='commit\t%H%nname\t%cn%nemail\t%cE%ndate\t%cD' --stat {0}";
+var stat_command = "cd {0} && git show --format='commit\t%H%nname\t%cn%nemail\t%cE%ndate\t%cD' --stat {1}";
 
 var commits = [];
 
 var do_each = function(commit, done) {
-	exec(stat_command.format(commit.commit), function(error, stdout/*, stderr*/) {
+	exec(stat_command.format(config.git_mirror_pwd, commit.commit), function(error, stdout/*, stderr*/) {
 		var lines = stdout.trim().split("\n");
 
 		for (var j = 1, m = lines.length; j < m; j ++) {
