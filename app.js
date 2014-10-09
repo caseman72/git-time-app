@@ -120,6 +120,10 @@ app.get("/", function(req, res) {
 
 app.get("/commits.json", function(req, res) {
 	//res.set("Content-Type", "application/json");
+	//
+	res.header("Access-Control-Allow-Origin", "*");
+	res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+
 	if (commits.length) {
 		res.json(commits);
 	}
