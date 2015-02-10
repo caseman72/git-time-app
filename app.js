@@ -4,7 +4,6 @@ var exec = require("child_process").exec;
 var async = require("async");
 var express = require("express");
 
-
 // this app's secret config values
 var config = {
 	server_port: process.env.NODE_APP_PORT || "3030",
@@ -27,6 +26,7 @@ var git_command = [
 var stat_command = "cd {0} && git show --format='commit\t%H%nname\t%cn%nemail\t%cE%ndate\t%cD' --stat {1}";
 
 var commits = [];
+var ready = false;
 
 var do_each = function(commit, done) {
 	exec(stat_command.format(config.git_mirror_pwd, commit.commit), function(error, stdout/*, stderr*/) {
@@ -45,6 +45,7 @@ var do_each = function(commit, done) {
 						.replace(/marketleader\.com/g, "trulia.com")
 						.replace(/krkdevandyg1\.sky\.dom/g, "trulia.com")
 						.replace(/chriss\-macbook\-pro\.local/g, "trulia.com")
+						.replace(/env04lnxint02\.sky\.dom/g, "trulia.com")
 						.replace(/beldevmroach1\.sky\.dom/g, "trulia.com");
 				}
 			}
@@ -83,19 +84,22 @@ var do_commits = function(callback) {
 					date: "",
 					files: 0,
 					insertions: 0,
-					deletions: 0
-					, message: words.join(" ")
+					deletions: 0,
+					message: words.join(" ")
 					//, line: line
 				});
 			}
 		}
 
-		async.eachLimit(commits, 100, do_each, function(/*err*/){ callback(commits); });
+		async.eachLimit(commits, 50, do_each, function(/*err*/){ callback(commits); });
 	});
 };
 
 // load it up
-do_commits(function(commits) { console.log("Ready", commits.length); });
+do_commits(function(commits) {
+	ready = true;
+	console.log("Ready", commits.length);
+});
 
 // prevent express from defining mount and then overriding it
 if (typeof(express.mount) === "undefined") {
@@ -124,7 +128,10 @@ app.get("/commits.json", function(req, res) {
 	res.header("Access-Control-Allow-Origin", "*");
 	res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
 
-	if (commits.length) {
+	if (!ready) {
+		res.json([]);
+	}
+	else if (commits.length) {
 		res.json(commits);
 	}
 	else {

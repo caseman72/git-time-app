@@ -98,6 +98,7 @@
 
 			// rules - controls
 			if (commit.merge) continue;
+			if (!commit.email) { console.log(commit);  continue;}
 			if (!$scope.emails[commit.email]._selected) continue;
 			if (!$scope.branches[commit.branch]._selected) continue;
 			if (!$scope.months[commit.month]._selected) continue;
@@ -252,7 +253,7 @@
 				commit.day = days_of_week[ this_date.getDay() ];
 
 				// emails
-				if(!ng.isDefined(emails[commit.email])) {
+				if(commit.email && !ng.isDefined(emails[commit.email])) {
 					var item = {
 						_selected: false,
 						label: commit.email
